@@ -27,6 +27,7 @@ module TysPrim(
 
         funTyCon, funTyConName,
         primTyCons,
+        primTypeableTyCons,
 
         charPrimTyCon,          charPrimTy,
         intPrimTyCon,           intPrimTy,
@@ -79,7 +80,7 @@ module TysPrim(
 #include "HsVersions.h"
 
 import {-# SOURCE #-} TysWiredIn
-  ( runtimeRepTy, liftedTypeKind
+  ( runtimeRepTyCon, runtimeRepTy, liftedTypeKind
   , vecRepDataConTyCon, ptrRepUnliftedDataConTyCon
   , voidRepDataConTy, intRepDataConTy
   , wordRepDataConTy, int64RepDataConTy, word64RepDataConTy, addrRepDataConTy
@@ -93,6 +94,7 @@ import {-# SOURCE #-} TysWiredIn
 
 import Var              ( TyVar, KindVar, mkTyVar )
 import Name
+import NameEnv
 import TyCon
 import SrcLoc
 import Unique
@@ -153,6 +155,18 @@ primTyCons
     , tYPETyCon
 
 #include "primop-vector-tycons.hs-incl"
+    ]
+
+-- | The names of the 'TyCon's which we define 'Typeable' bindings for
+-- explicitly in "Data.Typeable.Internal"
+-- and should not generate bindings for in "GHC.Types".
+--
+-- See Note [Mutually recursive representations of primitive types]
+primTypeableTyCons :: NameEnv TyConRepName
+primTypeableTyCons = mkNameEnv
+    [ (tYPETyConName, trTYPEName)
+    , (tyConName runtimeRepTyCon, trRuntimeRepName)
+    , (funTyConName, trArrowName)
     ]
 
 mkPrimTc :: FastString -> Unique -> TyCon -> Name
