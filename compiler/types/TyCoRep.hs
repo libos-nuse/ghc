@@ -2801,6 +2801,19 @@ pprTcApp_help to_type p pp tc tys dflags style
                                -- we know nothing of precedence though
   = pprInfixApp p pp pp_tc ty1 ty2
 
+  -- Handle equalities specifically
+  | is_het_equality
+  , [k1,k2,ty1,ty2] <- map to_type tys_wo_kinds
+  =   parens (pprType ty1 <+> dcolon <+> pprKind k1)
+  <+> text "~~"
+  <+> parens (pprType ty2 <+> dcolon <+> pprKind k2)
+
+  | is_equality
+  , [k,ty1,ty2] <- map to_type tys_wo_kinds
+  =   parens (pprType ty1 <+> dcolon <+> pprKind k)
+  <+> text "~"
+  <+> parens (pprType ty2 <+> dcolon <+> pprKind k)
+
   |  tc_name `hasKey` starKindTyConKey
   || tc_name `hasKey` unicodeStarKindTyConKey
   || tc_name `hasKey` unliftedTypeKindTyConKey
@@ -2810,12 +2823,14 @@ pprTcApp_help to_type p pp tc tys dflags style
   = pprPrefixApp p (parens pp_tc) (map (pp TyConPrec) tys_wo_kinds)
   where
     tc_name = tyConName tc
+    is_het_equality = tc `hasKey` heqTyConKey
+    is_equality = tc `hasKey` eqPrimTyConKey || is_het_equality
 
      -- With the solver working in unlifted equality, it will want to
      -- to print unlifted equality constraints sometimes. But these are
      -- confusing to users. So fix them up here.
     (print_prefix, pp_tc)
-      | (tc `hasKey` eqPrimTyConKey || tc `hasKey` heqTyConKey) && not print_eqs
+      | is_equality && not print_eqs
       = (False, text "~")
       | tc `hasKey` eqReprPrimTyConKey && not print_eqs
       = (True, text "Coercible")
