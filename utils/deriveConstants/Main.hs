@@ -411,10 +411,13 @@ wanteds os = concat
           ,closurePayload C "StgClosure" "payload"
 
           ,structFieldH Both "StgEntCounter" "allocs"
+          ,structFieldH Both "StgEntCounter" "allocd_count"
           ,structFieldH Both "StgEntCounter" "allocd"
           ,structField  Both "StgEntCounter" "registeredp"
           ,structField  Both "StgEntCounter" "link"
           ,structField  Both "StgEntCounter" "entry_count"
+          ,structField  Both "StgEntCounter" "single_entry_count"
+          ,structField  Both "StgEntCounter" "multi_entry_count"
 
           ,closureSize Both "StgUpdateFrame"
           ,closureSize C    "StgCatchFrame"
@@ -479,6 +482,10 @@ wanteds os = concat
           ,thunkSize C "StgSelector"
 
           ,closureFieldGcptr C "StgInd" "indirectee"
+
+          ,closureFieldGcptr Both "StgCountingInd" "indirectee"
+          ,closureField Both "StgCountingInd" "ent_counter"
+          ,closureField Both "StgCountingInd" "entries"
 
           ,closureSize  C "StgMutVar"
           ,closureField C "StgMutVar" "var"

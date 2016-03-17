@@ -580,6 +580,11 @@ scavenge_block (bdescr *bd)
         break;
     }
 
+    case COUNTING_IND:
+        evacuate(&((StgCountingInd *)p)->indirectee);
+        p += sizeofW(StgCountingInd);
+        break;
+
     case BLACKHOLE:
         evacuate(&((StgInd *)p)->indirectee);
         p += sizeofW(StgInd);
@@ -979,6 +984,12 @@ scavenge_mark_stack(void)
             break;
         }
 
+        case COUNTING_IND:
+            // don't need to do anything here: the only possible case
+            // is that we're in a 1-space compacting collector, with
+            // no "old" generation.
+            break;
+
         case IND:
         case BLACKHOLE:
             evacuate(&((StgInd *)p)->indirectee);
@@ -1288,6 +1299,7 @@ scavenge_one(StgPtr p)
     case CONSTR_2_0:
     case WEAK:
     case PRIM:
+    case COUNTING_IND:
     {
         StgPtr q, end;
 

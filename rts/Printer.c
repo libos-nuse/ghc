@@ -232,6 +232,12 @@ printClosure( StgClosure *obj )
             debugBelch(")\n");
             break;
 
+    case COUNTING_IND:
+            debugBelch("COUNTING_IND(");
+            printPtr((StgPtr)((StgInd*)obj)->indirectee);
+            debugBelch(")\n");
+            break;
+
     case IND_STATIC:
             debugBelch("IND_STATIC(");
             printPtr((StgPtr)((StgInd*)obj)->indirectee);
@@ -808,7 +814,8 @@ void prettyPrintClosure_ (StgClosure *obj)
     type = get_itbl(obj)->type;
 
     while (type == IND ||
-           type == IND_STATIC)
+           type == IND_STATIC ||
+           type == COUNTING_IND)
     {
       obj = ((StgInd *)obj)->indirectee;
       type = get_itbl(obj)->type;
@@ -919,6 +926,7 @@ char *closure_type_names[] = {
  [PAP]                   = "PAP",
  [AP_STACK]              = "AP_STACK",
  [IND]                   = "IND",
+ [COUNTING_IND]          = "COUNTING_IND",
  [IND_STATIC]            = "IND_STATIC",
  [RET_BCO]               = "RET_BCO",
  [RET_SMALL]             = "RET_SMALL",

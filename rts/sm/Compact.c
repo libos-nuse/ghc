@@ -649,6 +649,7 @@ thread_obj (StgInfoTable *info, StgPtr p)
     }
 
     case IND:
+    case COUNTING_IND:
         thread(&((StgInd *)p)->indirectee);
         return p + sizeofW(StgInd);
 
