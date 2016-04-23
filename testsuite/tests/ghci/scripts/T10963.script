@@ -1,0 +1,8 @@
+:type mapM
+:type-def mapM
+:td mapM
+:td length
+let foo :: (Num a, Monoid a) => a -> a; foo = undefined
+:td foo
+instance Monoid Double where mempty = 0; mappend = (+)
+:td foo

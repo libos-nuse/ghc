@@ -196,7 +196,11 @@ ghciCommands = map mkCmd [
   ("step",      keepGoing stepCmd,              completeIdentifier),
   ("steplocal", keepGoing stepLocalCmd,         completeIdentifier),
   ("stepmodule",keepGoing stepModuleCmd,        completeIdentifier),
-  ("type",      keepGoing' typeOfExpr,          completeExpression),
+  ("type",      keepGoing' (typeOfExpr GHC.TM_Inst),    completeExpression),
+  ("type-spec", keepGoing' (typeOfExpr GHC.TM_NoInst),  completeExpression),
+  ("ts",        keepGoing' (typeOfExpr GHC.TM_NoInst),  completeExpression),
+  ("type-def",  keepGoing' (typeOfExpr GHC.TM_Default), completeExpression),
+  ("td",        keepGoing' (typeOfExpr GHC.TM_Default), completeExpression),
   ("trace",     keepGoing traceCmd,             completeExpression),
   ("undef",     keepGoing undefineMacro,        completeMacro),
   ("unset",     keepGoing unsetOptions,         completeSetOptions),
@@ -293,6 +297,8 @@ defFullHelpText =
   "   :run function [<arguments> ...] run the function with the given arguments\n" ++
   "   :script <file>              run the script <file>\n" ++
   "   :type <expr>                show the type of <expr>\n" ++
+  "   :type-spec <expr>           show the type of <expr>, with its specified tyvars\n" ++
+  "   :type-def <expr>            show the type of <expr>, defaulting type variables\n" ++
   "   :undef <cmd>                undefine user-defined command :<cmd>\n" ++
   "   :!<command>                 run the shell command <command>\n" ++
   "\n" ++
@@ -1688,11 +1694,11 @@ exceptT :: Applicative m => Either e a -> ExceptT e m a
 exceptT = ExceptT . pure
 
 -----------------------------------------------------------------------------
--- | @:type@ command
+-- | @:type@ command. See also Note [TcRnExprMode] in TcRnDriver.
 
-typeOfExpr :: String -> InputT GHCi ()
-typeOfExpr str = handleSourceError GHC.printException $ do
-    ty <- GHC.exprType str
+typeOfExpr :: GHC.TcRnExprMode -> String -> InputT GHCi ()
+typeOfExpr mode str = handleSourceError GHC.printException $ do
+    ty <- GHC.exprType mode str
     printForUser $ sep [text str, nest 2 (dcolon <+> pprTypeForUser ty)]
 
 -----------------------------------------------------------------------------
