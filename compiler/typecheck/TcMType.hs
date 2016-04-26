@@ -67,7 +67,8 @@ module TcMType (
   mkTypeErrorThing, mkTypeErrorThingArgs,
   tidyEvVar, tidyCt, tidySkolemInfo,
   skolemiseUnboundMetaTyVar,
-  zonkTcTyVar, zonkTcTyVars, zonkTyCoVarsAndFV, zonkTcTypeAndFV,
+  zonkTcTyVar, zonkTcTyVars, zonkTcTyVarToTyVar,
+  zonkTyCoVarsAndFV, zonkTcTypeAndFV,
   zonkTcTypeAndSplitDepVars, zonkTcTypesAndSplitDepVars,
   zonkQuantifiedTyVar, zonkQuantifiedTyVarOrType,
   quantifyTyVars, quantifyZonkedTyVars,
@@ -1378,6 +1379,13 @@ zonkTcTyVar tv
   where
     zonk_kind_and_return = do { z_tv <- zonkTyCoVarKind tv
                               ; return (mkTyVarTy z_tv) }
+
+-- Variant that assumes that any result of zonking is still a TyVar.
+-- Should be used only on skolems and SigTvs
+zonkTcTyVarToTyVar :: TcTyVar -> TcM TcTyVar
+zonkTcTyVarToTyVar tv
+  = do { ty <- zonkTcTyVar tv
+       ; return (tcGetTyVar "zonkTcTyVarToVar" ty) }
 
 {-
 %************************************************************************
