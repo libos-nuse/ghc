@@ -110,7 +110,8 @@ endif
 NoSharedLibsPlatformList = \
 	powerpc-ibm-aix \
 	x86_64-unknown-mingw32 \
-	i386-unknown-mingw32
+	i386-unknown-mingw32 \
+	x86_64-rumprun-linux
 
 ifeq "$(SOLARIS_BROKEN_SHLD)" "YES"
 NoSharedLibsPlatformList += i386-unknown-solaris2

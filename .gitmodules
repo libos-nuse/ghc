@@ -118,3 +118,6 @@
 [submodule ".arc-linters/arcanist-external-json-linter"]
 	path = .arc-linters/arcanist-external-json-linter
 	url = ../arcanist-external-json-linter.git
+[submodule "frankenlibc"]
+	path = frankenlibc
+	url = git://github.com/libos-nuse/frankenlibc

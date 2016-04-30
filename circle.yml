@@ -1,0 +1,53 @@
+## Customize the test machine
+machine:
+  # Add some environment variables
+  ghc:
+    version: 7.8.3
+  environment:
+   OS: $(case $CIRCLE_NODE_INDEX in 0) os='linux' ;; 1) os='qemu-arm' ;; 2) os='linux' ;; 3) os='qemu-arm' ;; esac; echo $os)
+   RUMP: $(case $CIRCLE_NODE_INDEX in 0) rump='linux' ;; 1) rump='linux' ;; 2) rump='netbsd' ;; 3) rump='netbsd' ;; esac; echo $rump)
+   PATH: ${HOME}/.cabal/bin:${HOME}/ghc/frankenlibc/rump/bin:${PATH}
+
+## Customize dependencies
+dependencies:
+  pre:
+    - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+    - sudo add-apt-repository ppa:linaro-maintainers/tools -y
+    - sudo add-apt-repository ppa:terry.guo/gcc-arm-embedded -y
+    - sudo apt-get update -y
+    - sudo apt-get install qemu-kvm libxen-dev -y
+    - sudo apt-get install g++-4.8 bc libfuse-dev libarchive-dev -y
+    - sudo apt-get install -y gcc-arm-none-eabi qemu-system-arm
+    - cabal install happy
+  post:
+    # clear cache
+    # - rm -r ~/.gradle
+
+checkout:
+  post:
+    - git config --global url."git://github.com/ghc/packages-".insteadOf     git://github.com/libos-nuse/packages/ 
+    - git config --global url."http://github.com/ghc/packages-".insteadOf    http://github.com/libos-nuse/packages/ 
+    - git config --global url."https://github.com/ghc/packages-".insteadOf   https://github.com/libos-nuse/packages/ 
+    - git config --global url."ssh://git@github.com/ghc/packages-".insteadOf ssh://git@github.com/libos-nuse/packages/ 
+    - git config --global url."git@github.com:ghc/libffi-tarballs.git".insteadOf git@github.com:libos-nuse/libffi-tarballs.git 
+    - git config --global url."git@github.com:ghc/packages-".insteadOf      git@github.com:libos-nuse/packages/ 
+    - git config --global url."git@github.com:ghc/arcanist-external-json-linter.git".insteadOf git@github.com:libos-nuse/arcanist-external-json-linter.git 
+    - git config --global url."git@github.com:ghc/nofib.git".insteadOf git@github.com:libos-nuse/nofib.git 
+    - git config --global url."git@github.com:ghc/haddock.git".insteadOf git@github.com:libos-nuse/haddock.git 
+    - git config --global url."git@github.com:ghc/hsc2hs.git".insteadOf git@github.com:libos-nuse/hsc2hs.git 
+    - git submodule update --init --recursive
+    - git clone git://github.com/mirror/ncurses
+
+test:
+  pre:
+    - cd frankenlibc && ./build.sh -k linux linux:
+        parallel: true
+    - cd ncurses && ./configure CC=rumprun-cc --without-cxx --prefix=${HOME}/ghc/frankenlibc/rump/
+    # XXX: currently lkl-musl can't handle stdin properly...
+    - cd ncurses && make -C ncurses make_hash CC=cc
+    - cd ncurses && make install || true
+    - cd ${HOME}/ghc/frankenlibc/rump/include && ln -s ncurses/* ./
+
+  override:
+    - ./build.sh
+    - filename=$(mktemp --suffix=.hs) && echo "main= putStrLn \"Hello Haskell\"" > $filename && ./inst/bin/x86_64-rumprun-linux-gnu-ghc $filename -o hello && ./hello
